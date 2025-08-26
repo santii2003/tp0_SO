@@ -1,0 +1,77 @@
+Funciones de abstracción
+void buffer_add_uint32(t_buffer *buffer, uint32_t data);
+
+// Lee un uint32_t del buffer y avanza el offset
+uint32_t buffer_read_uint32(t_buffer *buffer);
+
+// Agrega un uint8_t al buffer
+void buffer_add_uint8(t_buffer *buffer, uint8_t data);
+
+// Lee un uint8_t del buffer y avanza el offset
+uint8_t buffer_read_uint8(t_buffer *buffer);
+
+// Agrega string al buffer con un uint32_t adelante indicando su longitud
+void buffer_add_string(t_buffer *buffer, uint32_t length, char *string);
+
+// Lee un string y su longitud del buffer y avanza el offset
+char *buffer_read_string(t_buffer *buffer, uint32_t *length);
+
+
+
+void buffer_add_uint32(t_buffer * buffer, uint32_t data) {
+	memcpy(buffer->stream + offset, &data, sizeof(uint32_t));
+	buffer->offset += sizeof(uint32_t);
+	
+}
+
+
+
+EN TP0, AL LEER EL OP_CODE COMO TAL, LEEMOS LOS PRIMEROS BYTES DEL PAQUETE, CON UN RECV . YA QUE ACÁ SE ENCUNETRAN EL VALOR DE ESE OP_CODE 
+
+EN TP SEGURAMENTE LO MEJOR SERÍA RECIBIR EL OP_CODE MEDIANTE ALGÚN HANDSHAKE
+	CONEXIÓN KERNEL - MEMORIA
+O BIEN -> ENVIAR TODA LA ESTRUCTURA DEL PAQUETE, LEER EL OP_CODE, LEER LOS DATOS DEL PAQUETE NECESARIOS PARA LA CONFIRMACIÓN.
+
+
+/*Funciones hechas sin las de data...*/
+
+void buffer_add_uint32(t_buffer * buffer, uint32_t data) {
+	memcpy(buffer->stream + buffer->offset, &data, sizeof(uint32_t));
+	buffer->offset += sizeof(uint32_t);
+	
+}
+
+uint32_t buffer_read_uint32 (t_buffer * buffer) {
+	uint32_t i; 
+	memcpy(&i, buffer->stream, sizeof(uint32_t));
+	buffer->stream += sizeof(uint32_t);
+	return i;
+}
+
+void buffer_add_uint8(t_buffer * buffer, uint8_t data) {
+	memcpy(buffer->stream + buffer->offset, &data, sizeof(uint8_t));
+	buffer->offset += sizeof(uint8_t);
+}
+
+uint8_t buffer_read_uint8(t_buffer * buffer) {
+	uint8_t i; 
+	memcpy(&i, buffer->stream, sizeof(uint8_t));
+	buffer->stream += sizeof(uint8_t);
+	return i;
+}
+
+void buffer_add_string (t_buffer * buffer, uint32_t length, char *string) {
+	/*primero el tamaño del string */
+	memcpy(buffer->stream + buffer->offset, &length, sizeof(uint32_t));
+	buffer->offset += sizeof(uint32_t); 
+	/*ahora el string (contenido)*/
+	memcpy(buffer->stream + buffer->offset, string, length); 
+	buffer->offset+= length; 
+}
+
+char *buffer_read_string (t_buffer * buffer, uint32_t *length){
+
+	return ""; 
+}
+
+
