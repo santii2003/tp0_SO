@@ -1,7 +1,9 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "/home/utnso/tp0_SistemasOperativos/gutils/gutils.h"
+
+#include "/home/utnso/tp0_SistemasOperativos_limpio/gutils/gutils.h"
+
 #include<signal.h>
 #include<sys/socket.h>
 #include<commons/log.h>
