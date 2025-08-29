@@ -108,6 +108,7 @@ typedef struct
 	void agregar_a_paquete_uint8(t_paquete * paquete, uint8_t dato); 
 	void agregar_a_paquete_uint32(t_paquete* paquete, uint32_t dato);
 	void agregar_a_paquete_string(t_paquete* paquete, uint32_t length_string, char *string);
+	void agregar_a_paquete_string_v2(t_paquete *paquete, char *string); 
 
 /* Para Pruebas */
 	void enviar_proceso (int socket, t_proceso *proceso); 

@@ -109,7 +109,6 @@ uint8_t buffer_read_uint8(t_buffer * buffer) {
 
 void buffer_add_string (t_buffer * buffer, uint32_t length, char *string) {
 	buffer_add(buffer, &length, sizeof(uint32_t));
-
 	buffer_add(buffer, string, length);
 }
 
@@ -127,7 +126,6 @@ char *buffer_read_string (t_buffer * buffer, uint32_t *length){
 char *buffer_read_string_v2(t_buffer * buffer ) {
 	uint32_t length;
 	buffer_read(buffer, &length, sizeof(uint32_t));
-
 	char *string = malloc (length);
 	buffer_read(buffer, string, length);
 	return string; 
@@ -142,8 +140,6 @@ void agregar_a_paquete_uint8(t_paquete * paquete, uint8_t dato) {
 
 void agregar_a_paquete_uint32(t_paquete* paquete, uint32_t dato) {
 	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t));
-	
-	
 	paquete->buffer->size +=sizeof(uint32_t);
 	buffer_add_uint32(paquete->buffer, dato);
 }
@@ -153,6 +149,15 @@ void agregar_a_paquete_string(t_paquete* paquete, uint32_t length_string, char *
 	paquete->buffer->size += sizeof(uint32_t) + length_string ;
 	buffer_add_string(paquete->buffer, length_string, string); 
 }
+
+
+void agregar_a_paquete_string_v2(t_paquete *paquete, char *string){
+	uint32_t length_string = strlen(string)+1; 
+	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t) + length_string);
+	paquete->buffer->size += sizeof(uint32_t) + length_string ;
+	buffer_add_string(paquete->buffer, length_string, string); 
+}
+
 
 void enviar_proceso (int socket, t_proceso *proceso) {
 	uint32_t l1, l2; 
