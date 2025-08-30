@@ -27,10 +27,10 @@ t_paquete* crear_paquete(op_code codigo_operacion, uint32_t size_buffer)
 t_paquete *crear_paquete_vacio(op_code codigo_operacion) {
 	t_paquete * paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = codigo_operacion;
-	//inciializo el buffer en NULL 
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = 0;
 	paquete->buffer->offset = 0;
+	//inciializo el stream en NULL para posterior realloc
 	paquete->buffer->stream = NULL;  
 	return paquete; 
 }
@@ -40,10 +40,8 @@ t_paquete *crear_paquete_vacio(op_code codigo_operacion) {
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 {
 	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));
-
 	memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio, sizeof(int));
 	memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), valor, tamanio);
-
 	paquete->buffer->size += tamanio + sizeof(int);
 }
 
@@ -51,9 +49,7 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + sizeof(uint32_t) + sizeof(op_code);
 	void* a_enviar = serializar_paquete(paquete, bytes);
-
 	send(socket_cliente, a_enviar, bytes, 0);
-
 	free(a_enviar);
 }
 
@@ -132,7 +128,6 @@ char *buffer_read_string_v2(t_buffer * buffer ) {
 }
 
 void agregar_a_paquete_uint8(t_paquete * paquete, uint8_t dato) {
-	
 	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(uint8_t));
 	paquete->buffer->size +=sizeof(uint8_t);
 	buffer_add_uint8(paquete->buffer, dato);
@@ -159,6 +154,17 @@ void agregar_a_paquete_string_v2(t_paquete *paquete, char *string){
 }
 
 
+uint8_t leer_de_paquete_uint8(t_paquete* paquete) {
+	return buffer_read_uint8(paquete->buffer);
+}
+uint32_t leer_de_paquete_uint32(t_paquete* paquete) {
+	return buffer_read_uint32(paquete->buffer);
+}
+char * leer_de_paquete_string (t_paquete* paquete) {
+	return buffer_read_string_v2(paquete->buffer); 
+}
+
+
 void enviar_proceso (int socket, t_proceso *proceso) {
 	uint32_t l1, l2; 
 
@@ -178,10 +184,11 @@ void enviar_proceso (int socket, t_proceso *proceso) {
 	agregar_a_paquete_uint8(paquete, (uint8_t)proceso->activo );
 
 	enviar_paquete(paquete, socket);	
-
 	eliminar_paquete(paquete);
 	
-}
+}	uint8_t leer_de_paquete_uint8(t_paquete* paquete);
+	uint32_t leer_de_paquete_uint32(t_paquete* paquete); 
+	char * leer_de_paquete_string (t_paquete* paquete); 
 
 t_proceso * recibir_proceso (int socket) {
 	t_proceso *proceso = malloc(sizeof(t_proceso)); 
@@ -208,4 +215,86 @@ t_proceso * recibir_proceso (int socket) {
 	eliminar_paquete(paquete);
 
 	return proceso;
+}
+
+
+int enviar_estructura (void * estructura, serializador_t serializador, int socket){
+	t_paquete * a_enviar =  serializador (estructura); 
+	enviar_paquete(a_enviar, socket); 
+	eliminar_paquete(a_enviar); 
+	return 0;
+}
+
+op_code recibir_operacion (int socket) {
+	op_code code;
+	if  (recv(socket, &code, sizeof(op_code), MSG_WAITALL) != -1 ) {
+		return code;
+	} else {
+		fprintf(stderr, "Error en recv, FUNCIÓN: recibir_operacion : %s\n", strerror(errno));
+		return ERROR; 
+	}
+
+}
+
+uint32_t recibir_size_buffer(int socket) {
+	uint32_t size_buffer; 
+	if  (recv(socket, &size_buffer, sizeof(uint32_t), MSG_WAITALL) == -1 ) {
+		fprintf(stderr, "Error en recv, FUNCIÓN: recibir_size_buffer : %s\n", strerror(errno));
+		return 1; 
+	} 
+	return size_buffer; 
+}
+
+//Asume que el op_code ya viene recibido. Esto para que pueda ser tratada en un switch case. 
+void * recibir_estructura (op_code code, descerializador_t descerializador, int socket) {
+	uint32_t size_buffer = recibir_size_buffer (socket); 
+	t_paquete * paquete = crear_paquete(code, size_buffer); 
+	if (recv(socket, paquete->buffer->stream, size_buffer, MSG_WAITALL) != -1) {
+		void * to_return = descerializador(paquete);
+		eliminar_paquete(paquete);
+		return to_return; 
+	} else {
+		fprintf(stderr, "Error en recv, FUNCIÓN: recibir_estructura : %s\n", strerror(errno));
+		return NULL; 
+	}
+}
+
+
+t_paquete * serializar_entero_booleano (void * dato) {
+	uint8_t entero_booleano = *(uint8_t*) dato; 
+	t_paquete * paquete = crear_paquete_vacio(ENTERO_BOOLEANO);	
+	agregar_a_paquete_uint8(paquete, entero_booleano);
+	return paquete;
+}
+
+
+t_paquete * serializar_entero (void *dato) {
+	uint32_t entero = *(uint32_t*) dato;
+	t_paquete * paquete = crear_paquete_vacio(ENTERO);
+	agregar_a_paquete_uint32(paquete, entero); 
+	return paquete; 
+}
+
+t_paquete * serializar_string (void *dato){
+	char * string = (char *) dato; 
+	t_paquete * paquete = crear_paquete_vacio(STRING); 
+	agregar_a_paquete_string_v2(paquete, string);
+	return paquete; 
+}
+
+
+void * descerializar_entero_booleano (t_paquete* p) {
+	uint8_t* entero_booleano =  malloc(sizeof(uint8_t)); 
+	*entero_booleano = leer_de_paquete_uint8 (p); 
+	return (void *) entero_booleano; 
+}
+void * descerializar_entero (t_paquete * p) {
+	uint8_t* entero =  malloc(sizeof(uint32_t)); 
+	*entero = leer_de_paquete_uint32 (p); 
+	return (void *) entero; 
+}
+
+void * descerializar_string (t_paquete * p) {
+	char * string = leer_de_paquete_string(p);
+	return (void*) string;
 }

@@ -8,7 +8,7 @@
 #include <string.h>
 #include<unistd.h>
 #include<netdb.h>
-
+#include <errno.h>
 
 
 typedef enum
@@ -17,6 +17,9 @@ typedef enum
 	LINEAS_MENSAJE,
 	PAQUETE,
 	PROCESO, 
+	ENTERO_BOOLEANO,
+	ENTERO,
+	STRING, 
 	/*SOLO UTILIZADO PARA CASOS DE ERROR EN recv op_code*/ 
 	ERROR
 }op_code;
@@ -110,8 +113,40 @@ typedef struct
 	void agregar_a_paquete_string(t_paquete* paquete, uint32_t length_string, char *string);
 	void agregar_a_paquete_string_v2(t_paquete *paquete, char *string); 
 
+/* Funciones que leen del paquete previamente armado*/
+	uint8_t leer_de_paquete_uint8(t_paquete* paquete);
+	uint32_t leer_de_paquete_uint32(t_paquete* paquete); 
+
+	/// @brief Lee de un paquete el contenido de un String reservando memoria. 
+	/// @param paquete 
+	/// @return contenido del string reservado en memoria. Liberarlo una vez que ya no sea útil. 
+	char * leer_de_paquete_string (t_paquete* paquete); 
+
 /* Para Pruebas */
 	void enviar_proceso (int socket, t_proceso *proceso); 
 	t_proceso * recibir_proceso (int socket); 
+
+/* Firmas auxiliares para el envio y recibimiento de estructuras/paquetes  */
+	typedef t_paquete * (*serializador_t) (void *);
+	typedef  void *   (*descerializador_t ) (t_paquete *);
+
+/* Envío y recibimiento de estructuras */
+	int enviar_estructura ( void * estructura, serializador_t serializador, int socket);
+	op_code recibir_operacion (int socket); 
+	uint32_t recibir_size_buffer(int socket);
+
+	void * recibir_estructura (op_code code, descerializador_t descerializador, int socket);
+
+
+/* Serializadores de estructuras */
+	t_paquete * serializar_entero_booleano (void *dato);
+	t_paquete * serializar_entero (void *dato);
+	t_paquete * serializar_string (void *dato);
+
+/* Descerializadores de estructuras */
+	void * descerializar_entero_booleano (t_paquete* p);
+	void * descerializar_entero (t_paquete * p);
+	void * descerializar_string (t_paquete * p);
+
 
 #endif /* GUTILS_H_ */
