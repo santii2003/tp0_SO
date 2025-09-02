@@ -3,6 +3,9 @@
 char *clave; 
 
 static void * descerializar_proceso (t_paquete* paquete); 
+
+
+
 int main(void) {
 	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG);
 	clave = NULL;
@@ -41,6 +44,7 @@ int main(void) {
 					printf("Nombre del proceso: %s\n", proceso_recibido->archivo);
 					printf("Nombre del propietario: %s\n", proceso_recibido->nombre_propietario);
 				}
+			// /*Se tienen que liberar los strings leídos de un paquete a mano antes de liberar toda la estructura*/
 			free(proceso_recibido->archivo);
 			free(proceso_recibido->nombre_propietario);
 
@@ -67,7 +71,6 @@ static void * descerializar_proceso (t_paquete* paquete) {
 
 	proceso->pid = leer_de_paquete_uint32(paquete);
 	/*liberar siempre los strings que leeamos de un paquete*/
-
 	proceso->nombre_propietario= leer_de_paquete_string(paquete);
 	proceso->archivo = leer_de_paquete_string(paquete);
 	proceso->activo =  (bool)leer_de_paquete_uint8(paquete);

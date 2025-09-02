@@ -142,59 +142,6 @@ char * leer_de_paquete_string (t_paquete* paquete) {
 }
 
 
-void enviar_proceso (int socket, t_proceso *proceso) {
-	uint32_t l1, l2; 
-
-	//seguir orden, si primero serializo algo, después será lo primero a descerializar
-	//por el offset
-	l1= strlen(proceso->archivo) + 1;
-	//por cada string añadido, necesito sumarle +4 por el size
-	l2 = strlen(proceso->nombre_propietario) +1;
-
-
-	t_paquete * paquete =  crear_paquete_vacio (PROCESO); 
-
-	//agrego por orden del proceso al paquete..
-	agregar_a_paquete_string(paquete, l1, proceso->archivo);
-	agregar_a_paquete_string(paquete, l2, proceso->nombre_propietario); 
-	agregar_a_paquete_uint32(paquete, proceso->pid);
-	agregar_a_paquete_uint8(paquete, (uint8_t)proceso->activo );
-
-	enviar_paquete(paquete, socket);	
-	eliminar_paquete(paquete);
-	
-}	uint8_t leer_de_paquete_uint8(t_paquete* paquete);
-	uint32_t leer_de_paquete_uint32(t_paquete* paquete); 
-	char * leer_de_paquete_string (t_paquete* paquete); 
-
-t_proceso * recibir_proceso (int socket) {
-	t_proceso *proceso = malloc(sizeof(t_proceso)); 
-	t_paquete *paquete = NULL; 
-
-	op_code code; 
-	uint32_t size_buffer;
-
-	recv(socket, &code, sizeof(op_code), 0);
-		if (code !=PROCESO ) return NULL; 
-
-	recv(socket, &size_buffer, sizeof(uint32_t), 0);
-
-	paquete = crear_paquete(code, size_buffer);
-	//recibo todo el stream de bytes
-	recv(socket, paquete->buffer->stream, size_buffer, 0);
-
-	//leo en el orden que envie el stream. 
-	proceso->archivo = buffer_read_string_v2(paquete->buffer);
-	proceso->nombre_propietario = buffer_read_string_v2(paquete->buffer);
-	proceso->pid = buffer_read_uint32(paquete->buffer);
-	proceso->activo = (bool) buffer_read_uint8(paquete->buffer);
-
-	eliminar_paquete(paquete);
-
-	return proceso;
-}
-
-
 int enviar_estructura (void * estructura, serializador_t serializador, int socket){
 	t_paquete * a_enviar =  serializador (estructura); 
 	enviar_paquete(a_enviar, socket); 

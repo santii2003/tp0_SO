@@ -113,8 +113,20 @@ typedef struct
 	t_paquete * serializar_string (void *dato);
 
 /* Descerializadores de estructuras */
+	
+	/// @brief Descerializa un entero booleano. Usarlo solo para envíos simples de entero_booleanos. 
+	/// @param paquete 
+	/// @return un puntero hacia la memoria inicializada con malloc. Castear con *(uint8_t*) 
 	void * descerializar_entero_booleano (t_paquete* paquete);
+	
+	/// @brief Descerializa un entero. Usarlo solo para envíos de simples de enteros. 
+	/// @param paquete 
+	/// @return un puntero hacia la memoria inicializada con malloc. Castear con *(uint32_t*) 
 	void * descerializar_entero (t_paquete * paquete);
+	
+	/// @brief Descerializa un string. Usarlo solo para envíos simples de strings.  
+	/// @param paquete 
+	/// @return un puntero hacia la memoria inicializada con malloc. 
 	void * descerializar_string (t_paquete * paquete);
 
 
