@@ -1,8 +1,8 @@
 #include "client.h"
 
-static void enviar_string (char * string, int socket); 
 static void consola_interactiva(int socket); 
 
+static t_paquete * serializar_proceso(void *);
 
 int main(void)
 {
@@ -47,11 +47,19 @@ int main(void)
 	conexion = crear_conexion(ip, puerto);
 	int entero_a_enviar = 10111;
 	bool booleano_a_enviar = true;
+	t_proceso* proceso =  malloc(sizeof(t_proceso));
+	proceso->activo = true;
+	proceso->archivo = "client.c";
+	proceso->pid = 0;
+	proceso->nombre_propietario = "santii.2003";
 
 	// char * string = malloc(sizeof(5));
 	// string =  "hola"; 
-	// enviar_estructura((void*) &entero_a_enviar ,serializar_entero, conexion);
+	enviar_estructura((void*)proceso, serializar_proceso, conexion ); 
+	enviar_estructura((void*) &entero_a_enviar ,serializar_entero, conexion);
 	enviar_estructura((void*) &booleano_a_enviar, serializar_entero_booleano, conexion);
+
+
 	// enviar_estructura((void*) valor, serializar_string, conexion);
 	// //string con almacenamiento dinámico
 	// enviar_estructura((void*) string, serializar_string, conexion);
@@ -60,7 +68,7 @@ int main(void)
 	// paquete(conexion);
 	// free(string); 
 	terminar_programa(conexion, logger, config);
-
+	free(proceso);
 	/*---------------------------------------------------PARTE 5-------------------------------------------------------------*/
 	// Proximamente
 }
@@ -109,6 +117,16 @@ void leer_consola(t_log* logger)
 }
 
 
+static t_paquete * serializar_proceso(void * estructura) {
+	t_proceso * proceso = (t_proceso*) estructura; 
+	t_paquete * paquete = crear_paquete_vacio(PROCESO);
+	/*al serializar una estructura dinámica, recordar orden para descerializar*/
+	agregar_a_paquete_uint32(paquete, proceso->pid);
+	agregar_a_paquete_string_v2(paquete, proceso->nombre_propietario);
+	agregar_a_paquete_string_v2(paquete, proceso->archivo);
+	agregar_a_paquete_uint8(paquete, proceso->activo);
+	return paquete; 
+}
 
 
 
@@ -137,16 +155,3 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 	log_destroy(logger);
 }
 
-static void enviar_string (char * string, int socket) {
-	/*cuento el carácter Nulo*/
-	uint32_t longitud_string = strlen(string)+1;
-	//Como tal utilizo el op_code MENSAJE pero se puede generalizar el caso para string
-	t_paquete *paquete = crear_paquete_vacio(MENSAJE); 
-
-	//Agrego al paquete solo el string
-	agregar_a_paquete_string(paquete, longitud_string, string); 
-	//envío por socket
-	enviar_paquete(paquete, socket); 
-
-	eliminar_paquete(paquete); 
-}
