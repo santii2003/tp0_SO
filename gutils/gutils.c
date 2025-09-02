@@ -1,5 +1,45 @@
 #include "gutils.h"
 
+/*STATIC FUNCTIONS*/
+
+	/*Funciones de abstracción de la Guía de Serialización*/
+
+	// Crea un buffer vacío de tamaño size y offset 0
+	//Primero antes de serializar se DEBE Saber cuántos bytes entra en el buffer. 
+	static t_buffer *buffer_create(uint32_t size);
+
+	// Libera la memoria asociada al buffer
+	static void buffer_destroy(t_buffer *buffer);
+
+	// Agrega un stream al buffer en la posición actual y avanza el offset
+	static void buffer_add(t_buffer *buffer, void *data, uint32_t size);
+
+	// Guarda size bytes del principio del buffer en la dirección data y avanza el offset
+	static void buffer_read(t_buffer *buffer, void *data, uint32_t size);
+
+	// Agrega un uint32_t al buffer
+	static void buffer_add_uint32(t_buffer *buffer, uint32_t data);
+
+	// Lee un uint32_t del buffer y avanza el offset
+	static uint32_t buffer_read_uint32(t_buffer *buffer);
+
+	// Agrega un uint8_t al buffer
+	static void buffer_add_uint8(t_buffer *buffer, uint8_t data);
+
+	// Lee un uint8_t del buffer y avanza el offset
+	static uint8_t buffer_read_uint8(t_buffer *buffer);
+
+	// Agrega string al buffer con un uint32_t adelante indicando su longitud, CONTANDO EL CARÁCTER NULO EN LENGTH. 
+	static void buffer_add_string(t_buffer *buffer, uint32_t length, char *string);
+
+	// Lee un string y su longitud del buffer y avanza el offset
+	static char *buffer_read_string(t_buffer *buffer, uint32_t *length);
+
+	// Lee un string y su longitud del buffer y avanza el offset. 
+	static char *buffer_read_string_v2(t_buffer * buffer );
+
+
+
 void *serializar_paquete(t_paquete* paquete, int bytes)
 {
 	void * magic = malloc(bytes);
@@ -63,73 +103,6 @@ void eliminar_paquete(t_paquete* paquete)
 	free(paquete);
 }
 
-t_buffer *buffer_create(uint32_t size) {
-	t_buffer * buf = malloc(sizeof(t_buffer)); 
-	buf->size = size; 
-	buf->stream = malloc(buf->size);
-	buf->offset = 0; 
-	return buf; 
-}
-
-void buffer_destroy (t_buffer *buffer) {
-	free(buffer->stream); 
-	free(buffer); 
-}
-
-void buffer_add(t_buffer *buffer, void *data, uint32_t size) {
-	memcpy(buffer->stream + buffer->offset, data, size);
-	buffer->offset += size; 
-
-}
-
-void buffer_read (t_buffer *buffer, void *data, uint32_t size) {
-	memcpy(data, buffer->stream + buffer->offset, size);
-    buffer->offset += size;
-}
-
-void buffer_add_uint32(t_buffer * buffer, uint32_t data) {
-	buffer_add(buffer, &data, sizeof(uint32_t));	
-}
-
-uint32_t buffer_read_uint32 (t_buffer * buffer) {
-	uint32_t i; 
-	buffer_read(buffer, &i ,sizeof(uint32_t)); 
-	return i;
-}
-
-void buffer_add_uint8(t_buffer * buffer, uint8_t data) {
-	buffer_add(buffer, &data, sizeof(uint8_t));
-}
-
-uint8_t buffer_read_uint8(t_buffer * buffer) {
-	uint8_t i; 
-	buffer_read(buffer, (void*) &i, sizeof(uint8_t)); 	
-	return i;
-}
-
-void buffer_add_string (t_buffer * buffer, uint32_t length, char *string) {
-	buffer_add(buffer, &length, sizeof(uint32_t));
-	buffer_add(buffer, string, length);
-}
-
-char *buffer_read_string (t_buffer * buffer, uint32_t *length){
-	/*primero leemos el tamaño de la cadena*/
-	buffer_read(buffer, length, sizeof(uint32_t)); 
-	/*Una vez leído, su tamaño está en el *length  */
-
-	/*reservo memoria para ese string y lo devuelvo*/
-	char *string = malloc(*length);
-	buffer_read(buffer, string, *length);
-	return string; 
-}
-
-char *buffer_read_string_v2(t_buffer * buffer ) {
-	uint32_t length;
-	buffer_read(buffer, &length, sizeof(uint32_t));
-	char *string = malloc (length);
-	buffer_read(buffer, string, length);
-	return string; 
-}
 
 void agregar_a_paquete_uint8(t_paquete * paquete, uint8_t dato) {
 	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(uint8_t));
@@ -287,18 +260,88 @@ t_paquete * serializar_string (void *dato){
 }
 
 
-void * descerializar_entero_booleano (t_paquete* p) {
+void * descerializar_entero_booleano (t_paquete* paquete) {
 	uint8_t* entero_booleano =  malloc(sizeof(uint8_t)); 
-	*entero_booleano = leer_de_paquete_uint8 (p); 
+	*entero_booleano = leer_de_paquete_uint8 (paquete); 
 	return (void *) entero_booleano; 
 }
-void * descerializar_entero (t_paquete * p) {
+void * descerializar_entero (t_paquete * paquete) {
 	uint32_t* entero =  malloc(sizeof(uint32_t)); 
-	*entero = leer_de_paquete_uint32 (p); 
+	*entero = leer_de_paquete_uint32 (paquete); 
 	return (void *) entero; 
 }
 
-void * descerializar_string (t_paquete * p) {
-	char * string = leer_de_paquete_string(p);
+void * descerializar_string (t_paquete * paquete) {
+	char * string = leer_de_paquete_string(paquete);
 	return (void*) string;
 }
+
+
+/*STATIC FUNCTIONS */
+	static t_buffer *buffer_create(uint32_t size) {
+		t_buffer * buf = malloc(sizeof(t_buffer)); 
+		buf->size = size; 
+		buf->stream = malloc(buf->size);
+		buf->offset = 0; 
+		return buf; 
+	}
+
+	static void buffer_destroy (t_buffer *buffer) {
+		free(buffer->stream); 
+		free(buffer); 
+	}
+
+	static void buffer_add(t_buffer *buffer, void *data, uint32_t size) {
+		memcpy(buffer->stream + buffer->offset, data, size);
+		buffer->offset += size; 
+
+	}
+
+	static void buffer_read (t_buffer *buffer, void *data, uint32_t size) {
+		memcpy(data, buffer->stream + buffer->offset, size);
+		buffer->offset += size;
+	}
+
+	static void buffer_add_uint32(t_buffer * buffer, uint32_t data) {
+		buffer_add(buffer, &data, sizeof(uint32_t));	
+	}
+
+	static uint32_t buffer_read_uint32 (t_buffer * buffer) {
+		uint32_t i; 
+		buffer_read(buffer, &i ,sizeof(uint32_t)); 
+		return i;
+	}
+
+	static void buffer_add_uint8(t_buffer * buffer, uint8_t data) {
+		buffer_add(buffer, &data, sizeof(uint8_t));
+	}
+
+	static uint8_t buffer_read_uint8(t_buffer * buffer) {
+		uint8_t i; 
+		buffer_read(buffer, (void*) &i, sizeof(uint8_t)); 	
+		return i;
+	}
+
+	static void buffer_add_string (t_buffer * buffer, uint32_t length, char *string) {
+		buffer_add(buffer, &length, sizeof(uint32_t));
+		buffer_add(buffer, string, length);
+	}
+
+	static char *buffer_read_string (t_buffer * buffer, uint32_t *length){
+		/*primero leemos el tamaño de la cadena*/
+		buffer_read(buffer, length, sizeof(uint32_t)); 
+		/*Una vez leído, su tamaño está en el *length  */
+
+		/*reservo memoria para ese string y lo devuelvo*/
+		char *string = malloc(*length);
+		buffer_read(buffer, string, *length);
+		return string; 
+	}
+
+	static char *buffer_read_string_v2(t_buffer * buffer ) {
+		uint32_t length;
+		buffer_read(buffer, &length, sizeof(uint32_t));
+		char *string = malloc (length);
+		buffer_read(buffer, string, length);
+		return string; 
+	}

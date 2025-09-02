@@ -1,6 +1,5 @@
 #include "client.h"
 
-static void consola_interactiva(int socket); 
 
 static t_paquete * serializar_proceso(void *);
 

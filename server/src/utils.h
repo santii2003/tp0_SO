@@ -22,7 +22,6 @@ int esperar_cliente(int);
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);
 
-t_paquete * recv_paquete( int socket); 
 
 
 
