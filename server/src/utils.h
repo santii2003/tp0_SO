@@ -21,7 +21,6 @@ int iniciar_servidor(void);
 int esperar_cliente(int);
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);
-op_code recibir_operacion(int);
 
 t_paquete * recv_paquete( int socket); 
 

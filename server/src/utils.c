@@ -44,18 +44,6 @@ int esperar_cliente(int socket_servidor)
 	return socket_cliente;
 }
 
-op_code recibir_operacion(int socket_cliente)
-{
-	op_code cod_op;
-	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
-		return cod_op;
-	else
-	{
-		close(socket_cliente);
-		return ERROR;
-	}
-	
-}
 
 void* recibir_buffer(int* size, int socket_cliente)
 {

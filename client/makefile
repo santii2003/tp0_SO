@@ -47,6 +47,8 @@ GUTILS_OBJS = $(wildcard ../gutils/obj/*.o)
 # Todos los objetos a linkear
 OBJS = $(CLIENT_OBJS) $(GUTILS_OBJS)
 
+
+
 # Set output
 OUT = $(call outname,$(NAME))
 
@@ -67,13 +69,11 @@ clean:
 	-for dir in $(SHARED_LIBPATHS) $(STATIC_LIBPATHS); do $(MAKE) -C $$dir clean; done
 
 
-$(OUT): obj/utils.o obj/client.o ../gutils/*.o | $(dir $(OUT))
-	gcc -g -Wall -DDEBUG -fdiagnostics-color=always -o bin/client \
-	    obj/utils.o obj/client.o ../gutils/*.o \
-	    -I../gutils -I./src -I/usr/local/include \
-	    -L/usr/local/lib \
-	    -lcommons -lpthread -lreadline -lm
 
+$(OUT): $(OBJS) | $(dir $(OUT))
+	$(CC) $(CFLAGS) -o "$@" $(OBJS) ../gutils/libgutils.a \
+	    $(IDIRS:%=-I%) $(LIBDIRS:%=-L%) $(RUNDIRS:%=-Wl,-rpath,%) \
+	    $(LIBS:%=-l%)
 
 
 
@@ -89,3 +89,9 @@ $(DEPS): $$(shell find $$(patsubst %lib/,%src/,$$(dir $$@)) -iname "*.c" -or -in
 
 $(sort $(dir $(OUT) $(OBJS))):
 	mkdir -pv $@
+
+.PHONY: valgrind
+valgrind: $(OUT)
+	valgrind --leak-check=full --show-leak-kinds=all \
+	         --track-origins=yes --verbose \
+	         $(OUT)

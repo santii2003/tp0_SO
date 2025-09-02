@@ -49,6 +49,9 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 
 
 void liberar_conexion(int socket_cliente)
+
 {
-	close(socket_cliente);
+	if 	(close(socket_cliente) == -1) {
+		fprintf(stderr, "Error en la FUNCIÓN: liberar_conexion. Error: %s\n", strerror(errno));
+	}
 }

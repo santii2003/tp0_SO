@@ -11,49 +11,34 @@ int main(void) {
 	int server_fd = iniciar_servidor();
 	log_info(logger, "Servidor listo para recibir al cliente");
 	int cliente_fd = esperar_cliente(server_fd);
-
-	clave = recibir_string(cliente_fd);  
-	printf("%s\n ", clave); 
-
-
-	t_proceso * proceso; 
-	proceso = recibir_proceso(cliente_fd);
-
-	printf(" Recibi del cliente un proceso el siguiente nombre: %s \n", proceso->archivo);
-
-	printf(" Propietario: %s \n", proceso->nombre_propietario);
-	printf(" PID : %d \n", proceso->pid);
-	printf(" Booleano: %d \n", (int)proceso->activo); //debe mostrar 1 -> true en binario
 	
-	free(proceso->archivo);
-	free(proceso->nombre_propietario);
-	free(proceso);
+	for (int i = 0; i < 1; i++) {
+    op_code code = recibir_operacion(cliente_fd);
 
-
-	// t_list* lista;
-
-
-
-
-	// while (1) {
-	// 	int cod_op = recibir_operacion(cliente_fd);
-	// 	switch (cod_op) {
-	// 	case MENSAJE:
-	// 		recibir_mensaje(cliente_fd);
-	// 		break;
-	// 	case PAQUETE:
-	// 		lista = recibir_paquete(cliente_fd);
-	// 		log_info(logger, "Me llegaron los siguientes valores:\n");
-	// 		list_iterate(lista, (void*) iterator);
-	// 		break;
-	// 	case -1:
-	// 		log_error(logger, "el cliente se desconecto. Terminando servidor");
-	// 		return EXIT_FAILURE;
-	// 	default:
-	// 		log_warning(logger,"Operacion desconocida. No quieras meter la pata");
-	// 		break;
-	// 	}
-	// }
+    switch (code) {
+        case STRING: {
+            char *string_recibido = recibir_estructura(code, descerializar_string, cliente_fd);
+            printf("String recibido: %s\n", string_recibido);
+            free(string_recibido);
+            break;
+        }
+        case ENTERO: {
+            uint32_t *entero_recibido = recibir_estructura(code, descerializar_entero, cliente_fd);
+            printf("Entero recibido: %d\n", *entero_recibido);
+            free(entero_recibido);
+            break;
+        }
+		case ENTERO_BOOLEANO: {
+			uint8_t *booleano_recibido = recibir_estructura(code, descerializar_entero_booleano, cliente_fd); 
+		 	printf("Booleano recibido: %u\n", *booleano_recibido);
+            free(booleano_recibido);
+            break;
+		}
+        default:
+            printf("Operación desconocida\n");
+            break;
+    }
+}
 
 
 	return EXIT_SUCCESS;

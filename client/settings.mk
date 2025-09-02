@@ -1,7 +1,6 @@
 # Libraries
 LIBS=commons pthread readline m
-LIBDIRS += ../gutils
-LIBS    += gutils
+
 IDIRS   += ../gutils
 
 

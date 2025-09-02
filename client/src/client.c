@@ -1,6 +1,7 @@
 #include "client.h"
 
 static void enviar_string (char * string, int socket); 
+static void consola_interactiva(int socket); 
 
 
 int main(void)
@@ -41,29 +42,23 @@ int main(void)
 
 	// ADVERTENCIA: Antes de continuar, tenemos que asegurarnos que el servidor esté corriendo para poder conectarnos a él
 
-	
 
 	// Creamos una conexión hacia el servidor
 	conexion = crear_conexion(ip, puerto);
-	// Enviamos al servidor el valor de CLAVE como mensaje -> UTILIZO EL PAQUETE
+	int entero_a_enviar = 10111;
+	bool booleano_a_enviar = true;
 
-	enviar_string(valor, conexion); 
-
-	t_proceso * proceso = malloc(sizeof(t_proceso));
-	proceso->archivo = "CLIENTE.C";
-	proceso->nombre_propietario = "santii2003";
-	proceso->pid = 0;
-	proceso->activo = true; 
-
-	enviar_proceso(conexion, proceso);
-
-	free(proceso);
-
-
-
+	// char * string = malloc(sizeof(5));
+	// string =  "hola"; 
+	// enviar_estructura((void*) &entero_a_enviar ,serializar_entero, conexion);
+	enviar_estructura((void*) &booleano_a_enviar, serializar_entero_booleano, conexion);
+	// enviar_estructura((void*) valor, serializar_string, conexion);
+	// //string con almacenamiento dinámico
+	// enviar_estructura((void*) string, serializar_string, conexion);
 
 	// // Armamos y enviamos el paquete
 	// paquete(conexion);
+	// free(string); 
 	terminar_programa(conexion, logger, config);
 
 	/*---------------------------------------------------PARTE 5-------------------------------------------------------------*/
@@ -73,7 +68,7 @@ int main(void)
 t_log* iniciar_logger(void)
 {	
 	//uso de ruta absoluta
-	t_log* nuevo_logger = log_create("/home/utnso/tp0_SistemasOperativos/client/logs/tp0.log","Cliente", true,LOG_LEVEL_INFO);
+	t_log* nuevo_logger = log_create("logs/tp0.log","Cliente", true,LOG_LEVEL_INFO);
 	return nuevo_logger;
 }
 
@@ -109,13 +104,14 @@ void leer_consola(t_log* logger)
 		nl++;
 	}
 	
-
 	// El resto, las vamos leyendo y logueando hasta recibir un string vacío
-
-
 	// ¡No te olvides de liberar las leidos antes de regresar!
-
 }
+
+
+
+
+
 
 void paquete(int conexion)
 {
@@ -131,11 +127,12 @@ void paquete(int conexion)
 }
 
 
+
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
 	/* Y por ultimo, hay que liberar lo que utilizamos (conexion, log y config) 
 	  con las funciones de las commons y del TP mencionadas en el enunciado */
-	close(conexion);
+	liberar_conexion(conexion); 
 	config_destroy(config); 
 	log_destroy(logger);
 }

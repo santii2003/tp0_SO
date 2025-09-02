@@ -21,7 +21,9 @@ typedef enum
 	ENTERO,
 	STRING, 
 	/*SOLO UTILIZADO PARA CASOS DE ERROR EN recv op_code*/ 
-	ERROR
+	ERROR, 
+	/*Pruebas*/
+	ENVIAR
 }op_code;
 
 typedef struct {

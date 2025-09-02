@@ -69,15 +69,9 @@ clean:
 	-for dir in $(SHARED_LIBPATHS) $(STATIC_LIBPATHS); do $(MAKE) -C $$dir clean; done
 
 $(OUT): $(OBJS) | $(dir $(OUT))
-	$(call compile_out)
-
-$(OUT): obj/utils.o obj/server.o ../gutils/*.o | $(dir $(OUT))
-	gcc -g -Wall -DDEBUG -fdiagnostics-color=always -o bin/server \
-	    obj/utils.o obj/server.o ../gutils/*.o \
-	    -I../gutils -I./src -I/usr/local/include \
-	    -L/usr/local/lib \
+	$(CC) $(CFLAGS) -o "$@" $(OBJS) ../gutils/libgutils.a \
+	    $(IDIRS:%=-I%) $(LIBDIRS:%=-L%) $(RUNDIRS:%=-Wl,-rpath,%) \
 	    -lcommons -lpthread -lreadline -lm
-
 
 
 obj/%.o: src/%.c $(SRCS_H) $(DEPS) | $(dir $(OBJS))
@@ -89,3 +83,10 @@ $(DEPS): $$(shell find $$(patsubst %lib/,%src/,$$(dir $$@)) -iname "*.c" -or -in
 
 $(sort $(dir $(OUT) $(OBJS))):
 	mkdir -pv $@
+
+
+.PHONY: valgrind
+valgrind: $(OUT)
+	valgrind --leak-check=full --show-leak-kinds=all \
+	         --track-origins=yes --verbose \
+	         $(OUT)

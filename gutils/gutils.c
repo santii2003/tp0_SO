@@ -49,7 +49,11 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + sizeof(uint32_t) + sizeof(op_code);
 	void* a_enviar = serializar_paquete(paquete, bytes);
-	send(socket_cliente, a_enviar, bytes, 0);
+
+	if (send(socket_cliente, a_enviar, bytes, 0) == -1) {
+		fprintf(stderr, "Error en send, FUNCIÓN: enviar_paquete : %s\n", strerror(errno));
+		return; 
+	}
 	free(a_enviar);
 }
 
@@ -289,7 +293,7 @@ void * descerializar_entero_booleano (t_paquete* p) {
 	return (void *) entero_booleano; 
 }
 void * descerializar_entero (t_paquete * p) {
-	uint8_t* entero =  malloc(sizeof(uint32_t)); 
+	uint32_t* entero =  malloc(sizeof(uint32_t)); 
 	*entero = leer_de_paquete_uint32 (p); 
 	return (void *) entero; 
 }
