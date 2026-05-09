@@ -4,7 +4,7 @@
 /*el include con ruta absoluta solo sirve para esta máquina, cambiar a 
 una relativa si hay error*/
 
-#include "/home/utnso/tp0_SistemasOperativos_limpio/gutils/gutils.h"
+#include "../../gutils/gutils.h"
 #include<sys/socket.h>
 #include<commons/log.h>
 #include<commons/collections/list.h>
